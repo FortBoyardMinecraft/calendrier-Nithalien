@@ -95,7 +95,7 @@
 <body>
   <div class="container">
     <h1>Calendrier Nithalien</h1>
-    <div class="date" id="nithalien-date">01 Janvier 0001</div>
+    <div class="date" id="nithalien-date"></div>
     <div class="sub" id="current-time"></div>
     <div class="controls">
       <button id="prev-month">◀</button>
@@ -111,12 +111,12 @@ const monthsNormal = [30,29,30,29,30,29,30,29,30,29,30,29];
 const monthsNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre","Trŕcembre"];
 const embolicYears = [3,6,8,11,14,17,19];
 
-// La date actuelle Nithalienne (fixe pour affichage)
-const currentYear = 0;
-const currentMonth = 10;
-const currentDay = 1;
+// La date actuelle Nithalienne (qui avance)
+let currentYear = 0;
+let currentMonth = 10;
+let currentDay = 2;
 
-// Variables pour la navigation d'affichage
+// Variables pour la navigation d'affichage du mois
 let viewedYear = currentYear;
 let viewedMonth = currentMonth;
 
@@ -132,7 +132,36 @@ function getMonthsForYear(year){
 
 function updateTime(){
   const now = new Date();
-  document.getElementById('current-time').textContent = now.toLocaleTimeString('fr-FR');
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  document.getElementById('current-time').textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+
+  // Avancer le jour Nithalien si minuit passé
+  const monthLengths = getMonthsForYear(currentYear);
+  if(currentDay < monthLengths[currentMonth]){
+    if(hours === 0 && minutes === 0 && seconds === 0){
+      currentDay++;
+      if(viewedYear === currentYear && viewedMonth === currentMonth){
+        renderCalendar();
+      }
+      renderHeader();
+    }
+  } else {
+    if(hours === 0 && minutes === 0 && seconds === 0){
+      currentDay = 1;
+      currentMonth++;
+      const monthsThisYear = getMonthsForYear(currentYear);
+      if(currentMonth >= monthsThisYear.length){
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderHeader();
+      if(viewedYear === currentYear && viewedMonth === currentMonth){
+        renderCalendar();
+      }
+    }
+  }
 }
 setInterval(updateTime,1000);
 updateTime();
