@@ -106,17 +106,18 @@
   </div>
 
 <script>
-// Configuration du cycle Nithalien
 const monthsNormal = [30,29,30,29,30,29,30,29,30,29,30,29];
 const monthsNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre","Trŕcembre"];
 const embolicYears = [3,6,8,11,14,17,19];
 
-// La date actuelle Nithalienne (qui avance)
-let currentYear = 0;
-let currentMonth = 10;
-let currentDay = 2;
+// Charger ou initialiser la date Nithalienne depuis le stockage local
+let stored = localStorage.getItem('nithalienDate');
+let nithalienDate = stored ? JSON.parse(stored) : { year: 0, month: 10, day: 1 };
 
-// Variables pour la navigation d'affichage du mois
+let currentYear = nithalienDate.year;
+let currentMonth = nithalienDate.month;
+let currentDay = nithalienDate.day;
+
 let viewedYear = currentYear;
 let viewedMonth = currentMonth;
 
@@ -130,6 +131,10 @@ function getMonthsForYear(year){
   return months;
 }
 
+function saveDate(){
+  localStorage.setItem('nithalienDate', JSON.stringify({ year: currentYear, month: currentMonth, day: currentDay }));
+}
+
 function updateTime(){
   const now = new Date();
   const hours = now.getHours();
@@ -137,32 +142,25 @@ function updateTime(){
   const seconds = now.getSeconds();
   document.getElementById('current-time').textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
 
-  // Avancer le jour Nithalien si minuit passé
-  const monthLengths = getMonthsForYear(currentYear);
-  if(currentDay < monthLengths[currentMonth]){
-    if(hours === 0 && minutes === 0 && seconds === 0){
-      currentDay++;
-      if(viewedYear === currentYear && viewedMonth === currentMonth){
-        renderCalendar();
-      }
-      renderHeader();
-    }
-  } else {
-    if(hours === 0 && minutes === 0 && seconds === 0){
+  if(hours === 0 && minutes === 0 && seconds === 0){
+    const monthLengths = getMonthsForYear(currentYear);
+    currentDay++;
+    if(currentDay > monthLengths[currentMonth]){
       currentDay = 1;
       currentMonth++;
-      const monthsThisYear = getMonthsForYear(currentYear);
-      if(currentMonth >= monthsThisYear.length){
+      if(currentMonth >= monthLengths.length){
         currentMonth = 0;
         currentYear++;
       }
-      renderHeader();
-      if(viewedYear === currentYear && viewedMonth === currentMonth){
-        renderCalendar();
-      }
+    }
+    saveDate();
+    renderHeader();
+    if(viewedYear === currentYear && viewedMonth === currentMonth){
+      renderCalendar();
     }
   }
 }
+
 setInterval(updateTime,1000);
 updateTime();
 
