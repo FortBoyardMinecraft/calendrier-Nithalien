@@ -6,110 +6,258 @@
 <title>Calendrier Nithalien</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b0b10;--text:#f1f1f1;--accent:#00bcd4;--card:#181825;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;font-family:Inter,sans-serif;
-  background:radial-gradient(circle at top left,#10101a,#050508);
-  color:var(--text);display:flex;align-items:center;justify-content:center;height:100vh
-}
-.container{
-  background:var(--card);padding:2rem 3rem;border-radius:20px;
-  box-shadow:0 0 25px rgba(0,188,212,.15);width:min(800px,90%);text-align:center
-}
-h1{margin:0;color:var(--accent)}
-.date{font-size:1.8rem;margin:1rem 0;font-weight:600}
-.sub{color:#ccc;margin-bottom:1rem}
-.controls{display:flex;gap:1rem;justify-content:center;align-items:center}
-.month-display{color:var(--accent);font-size:1.2rem}
-button{background:var(--accent);border:none;padding:.6rem 1.2rem;border-radius:10px;cursor:pointer}
-.calendar{margin-top:1rem;display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem}
-.day{background:rgba(255,255,255,.05);padding:.6rem;border-radius:8px}
-.day.today{background:var(--accent);color:#000;font-weight:600}
+  :root {
+    --bg: #0b0b10;
+    --text: #f1f1f1;
+    --accent: #00bcd4;
+    --card-bg: #181825;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at top left, #10101a, #050508);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  .container {
+    background: var(--card-bg);
+    padding: 2rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 0 25px rgba(0, 188, 212, 0.15);
+    text-align: center;
+    width: min(800px, 90%);
+  }
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: var(--accent);
+  }
+  .date {
+    font-size: 1.8rem;
+    margin: 1.2rem 0 0.5rem;
+    font-weight: 600;
+  }
+  .sub {
+    color: #ccc;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    animation: fade 1s ease-in-out infinite alternate;
+  }
+  @keyframes fade {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
+  }
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .5rem;
+    margin-top: 1rem;
+  }
+  .day {
+    background: rgba(255,255,255,0.05);
+    padding: .7rem 0;
+    border-radius: 10px;
+  }
+  .day.today {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+  }
+  .controls {
+    margin-top: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+  .month-display {
+    font-size: 1.2rem;
+    color: var(--accent);
+  }
+  button {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: .7rem 1.4rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  button:hover { background: #08e0ff; }
 </style>
 </head>
 <body>
-<div class="container">
-<h1>Calendrier Nithalien</h1>
-<div class="date" id="nithalien-date"></div>
-<div class="sub" id="current-time"></div>
-<div class="controls">
-<button id="prev">◀</button>
-<div class="month-display" id="viewed"></div>
-<button id="next">▶</button>
-</div>
-<div class="calendar" id="calendar"></div>
-</div>
+  <div class="container">
+    <h1>Calendrier Nithalien</h1>
+    <div class="date" id="nithalien-date"></div>
+    <div class="sub" id="current-time"></div>
+    <div class="controls">
+      <button id="prev-month">◀</button>
+      <div class="month-display" id="viewed-month"></div>
+      <button id="next-month">▶</button>
+    </div>
+    <div id="calendar" class="calendar"></div>
+  </div>
 
 <script>
-/**************** CONFIG ****************/
-const monthsNames=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre","Trŕcembre"];
-const monthsNormal=[30,29,30,29,30,29,30,29,30,29,30,29];
-const embolicYears=[3,6,8,11,14,17,19];
-const DAY_MS=86400000;
+const monthsNormal = [30,29,30,29,30,29,30,29,30,29,30,29];
+const monthsNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre","Trŕcembre"];
+const embolicYears = [3,6,8,11,14,17,19];
 
-function isEmbolic(y){return embolicYears.includes((y%19)||19)}
-function monthsOf(y){const m=[...monthsNormal];if(isEmbolic(y))m.push(30);return m}
+// Date grégorienne de référence + date Nithalienne associée
+let stored = localStorage.getItem('nithalienRef');
 
-/*************** RÉFÉRENCE ***************/
-let ref=JSON.parse(localStorage.getItem("nithalienRef"));
-if(!ref){
-  const d=new Date();d.setHours(0,0,0,0);
-  ref={greg:d.getTime(),nith:{year:0,month:10,day:1}};
-  localStorage.setItem("nithalienRef",JSON.stringify(ref));
+const GREG_DAY_MS = 24 * 60 * 60 * 1000;
+
+let ref;
+if(stored){
+  ref = JSON.parse(stored);
+} else {
+  // Référence initiale : aujourd'hui = 01 novembre 0000
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  ref = {
+    gregorian: today.getTime(),
+    nithalien: { year: 0, month: 10, day: 1 }
+  };
+  localStorage.setItem('nithalienRef', JSON.stringify(ref));
 }
 
-/*************** CALCUL ****************/
-function addDays(n,days){
-  let {year,month,day}=n;
-  while(days--){
-    const m=monthsOf(year);
+function isEmbolic(year){
+  return embolicYears.includes((year % 19 === 0 ? 19 : year % 19));
+}
+
+function getMonthsForYear(year){
+  const months = [...monthsNormal];
+  if(isEmbolic(year)) months.push(30);
+  return months;
+}
+
+function addNithalienDays(date, days){
+  let { year, month, day } = date;
+  while(days > 0){
+    const months = getMonthsForYear(year);
     day++;
-    if(day>m[month]){day=1;month++;if(month>=m.length){month=0;year++}}
+    if(day > months[month]){
+      day = 1;
+      month++;
+      if(month >= months.length){
+        month = 0;
+        year++;
+      }
+    }
+    days--;
   }
-  return{year,month,day}
+  return { year, month, day };
 }
 
-const today=new Date();today.setHours(0,0,0,0);
-const delta=Math.floor((today-ref.greg)/DAY_MS);
-let current=addDays(ref.nith,delta);
+// Calcul de la date Nithalienne actuelle
+const now = new Date();
+now.setHours(0,0,0,0);
+const diffDays = Math.floor((now.getTime() - ref.gregorian) / GREG_DAY_MS);
 
-let cy=current.year,cm=current.month,cd=current.day;
-let vy=cy,vm=cm;
+const current = addNithalienDays(ref.nithalien, diffDays);
 
-/*************** RENDER *****************/
+let currentYear = current.year;
+let currentMonth = current.month;
+let currentDay = current.day;
+
+let viewedYear = currentYear;
+let viewedMonth = currentMonth;
+
+function isEmbolic(year){
+  return embolicYears.includes((year % 19 === 0 ? 19 : year % 19));
+}
+
+function getMonthsForYear(year){
+  const months = [...monthsNormal];
+  if(isEmbolic(year)) months.push(30);
+  return months;
+}
+
+function saveDate(){
+  localStorage.setItem('nithalienDate', JSON.stringify({ year: currentYear, month: currentMonth, day: currentDay }));
+}
+
+function updateTime(){
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  document.getElementById('current-time').textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+
+  if(hours === 0 && minutes === 0 && seconds === 0){
+    const monthLengths = getMonthsForYear(currentYear);
+    currentDay++;
+    if(currentDay > monthLengths[currentMonth]){
+      currentDay = 1;
+      currentMonth++;
+      if(currentMonth >= monthLengths.length){
+        currentMonth = 0;
+        currentYear++;
+      }
+    }
+    saveDate();
+    renderHeader();
+    if(viewedYear === currentYear && viewedMonth === currentMonth){
+      renderCalendar();
+    }
+  }
+}
+
+setInterval(updateTime,1000);
+updateTime();
+
 function renderHeader(){
-  document.getElementById("nithalien-date").textContent=
-  `${String(cd).padStart(2,"0")} ${monthsNames[cm]} ${String(cy).padStart(4,"0")}`
+  document.getElementById('nithalien-date').textContent = `${String(currentDay).padStart(2,'0')} ${monthsNames[currentMonth]} ${String(currentYear).padStart(4,'0')}`;
 }
-function renderViewed(){
-  document.getElementById("viewed").textContent=
-  `${monthsNames[vm]} ${String(vy).padStart(4,"0")}`
+
+function renderViewedMonth(){
+  document.getElementById('viewed-month').textContent = `${monthsNames[viewedMonth]} ${String(viewedYear).padStart(4,'0')}`;
 }
-function renderCal(){
-  const cal=document.getElementById("calendar");cal.innerHTML="";
-  const m=monthsOf(vy)[vm];
-  for(let d=1;d<=m;d++){
-    const div=document.createElement("div");div.className="day";div.textContent=d;
-    if(vy===cy&&vm===cm&&d===cd)div.classList.add("today");
-    cal.appendChild(div)
+
+function renderCalendar(){
+  const calendar = document.getElementById('calendar');
+  calendar.innerHTML = '';
+  const months = getMonthsForYear(viewedYear);
+  for(let d=1; d<=months[viewedMonth]; d++){
+    const div = document.createElement('div');
+    div.className = 'day';
+    div.textContent = d;
+    if(viewedYear === currentYear && viewedMonth === currentMonth && d === currentDay){
+      div.classList.add('today');
+    }
+    calendar.appendChild(div);
   }
 }
 
-/*************** TIME *******************/
-setInterval(()=>{
-  const n=new Date();
-  document.getElementById("current-time").textContent=
-  n.toLocaleTimeString("fr-FR");
-},1000);
+function changeMonth(delta){
+  const months = getMonthsForYear(viewedYear);
+  viewedMonth += delta;
+  if(viewedMonth < 0){
+    viewedYear--;
+    const prevMonths = getMonthsForYear(viewedYear);
+    viewedMonth = prevMonths.length - 1;
+  } else if(viewedMonth >= months.length){
+    viewedMonth = 0;
+    viewedYear++;
+  }
+  renderViewedMonth();
+  renderCalendar();
+}
 
-/*************** NAV ********************/
-document.getElementById("prev").onclick=()=>{vm--;if(vm<0){vy--;vm=monthsOf(vy).length-1}renderViewed();renderCal()}
-document.getElementById("next").onclick=()=>{vm++;if(vm>=monthsOf(vy).length){vm=0;vy++}renderViewed();renderCal()}
+document.getElementById('prev-month').addEventListener('click', ()=>changeMonth(-1));
+document.getElementById('next-month').addEventListener('click', ()=>changeMonth(1));
 
-renderHeader();renderViewed();renderCal();
+renderHeader();
+renderViewedMonth();
+renderCalendar();
 </script>
 </body>
 </html>
