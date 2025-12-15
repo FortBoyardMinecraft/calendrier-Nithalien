@@ -42,22 +42,20 @@ const DAY_MS=86400000
 function isEmbolic(y){if(y<=0)return false;const c=y%19||19;return embolicYears.includes(c)}
 function monthsOf(y){const m=[...monthsNormal];if(isEmbolic(y))m.push(30);return m}
 
-let ref=JSON.parse(localStorage.getItem("nithalienRef"))
+let ref
+try{ref=JSON.parse(localStorage.getItem("nithalienRef"))}catch(e){ref=null}
+
 if(!ref||!ref.nith||ref.nith.month>=monthsOf(ref.nith.year).length){
-  const anchor=new Date();
+  const anchor=new Date()
   anchor.setHours(0,0,0,0)
-  ref={
-    greg: anchor.getTime(),
-    nith: { year:0, month:11, day:14 }
-  }
+  ref={greg:anchor.getTime(),nith:{year:0,month:11,day:14}}
   localStorage.setItem("nithalienRef",JSON.stringify(ref))
-}
 }
 
 function addDays(n,days){let year=n.year,month=n.month,day=n.day;while(days>0){const m=monthsOf(year);day++;if(day>m[month]){day=1;month++;if(month>=m.length){month=0;year++}}days--}return{year,month,day}}
 
 const today=new Date();today.setHours(0,0,0,0)
-const delta=Math.max(0,Math.floor((today-ref.greg)/DAY_MS))
+const delta=Math.max(0,Math.floor((today.getTime()-ref.greg)/DAY_MS))
 const current=addDays(ref.nith,delta)
 
 let cy=current.year,cm=current.month,cd=current.day
