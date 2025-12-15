@@ -43,9 +43,18 @@ function isEmbolic(y){if(y<=0)return false;const c=y%19||19;return embolicYears.
 function monthsOf(y){const m=[...monthsNormal];if(isEmbolic(y))m.push(30);return m}
 
 let ref=JSON.parse(localStorage.getItem("nithalienRef"))
-if(!ref){const d=new Date();d.setHours(0,0,0,0);ref={greg:d.getTime(),nith:{year:0,month:10,day:1}};localStorage.setItem("nithalienRef",JSON.stringify(ref))}
+if(!ref||!ref.nith||ref.nith.month>=monthsOf(ref.nith.year).length){
+  const anchor=new Date();
+  anchor.setHours(0,0,0,0)
+  ref={
+    greg: anchor.getTime(),
+    nith: { year:0, month:11, day:14 }
+  }
+  localStorage.setItem("nithalienRef",JSON.stringify(ref))
+}
+}
 
-function addDays(n,days){let{year,month,day}=n;while(days>0){const m=monthsOf(year);day++;if(day>m[month]){day=1;month++;if(month>=m.length){month=0;year++}}days--}return{year,month,day}}
+function addDays(n,days){let year=n.year,month=n.month,day=n.day;while(days>0){const m=monthsOf(year);day++;if(day>m[month]){day=1;month++;if(month>=m.length){month=0;year++}}days--}return{year,month,day}}
 
 const today=new Date();today.setHours(0,0,0,0)
 const delta=Math.max(0,Math.floor((today-ref.greg)/DAY_MS))
@@ -56,7 +65,7 @@ let vy=cy,vm=cm
 
 function renderHeader(){document.getElementById("nithalien-date").textContent=`${String(cd).padStart(2,"0")} ${monthsNames[cm]} ${String(cy).padStart(4,"0")}`}
 function renderViewed(){document.getElementById("viewed").textContent=`${monthsNames[vm]} ${String(vy).padStart(4,"0")}`}
-function renderCal(){const cal=document.getElementById("calendar");cal.innerHTML="";const m=monthsOf(vy)[vm];for(let d=1;d<=m;d++){const div=document.createElement("div");div.className="day";div.textContent=d;if(vy===cy&&vm===cm&&d===cd)div.classList.add("today");cal.appendChild(div)}}
+function renderCal(){const cal=document.getElementById("calendar");cal.innerHTML="";const len=monthsOf(vy)[vm];for(let d=1;d<=len;d++){const div=document.createElement("div");div.className="day";div.textContent=d;if(vy===cy&&vm===cm&&d===cd)div.classList.add("today");cal.appendChild(div)}}
 
 setInterval(()=>{document.getElementById("current-time").textContent=new Date().toLocaleTimeString("fr-FR")},1000)
 
