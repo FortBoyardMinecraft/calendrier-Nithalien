@@ -110,13 +110,63 @@ const monthsNormal = [30,29,30,29,30,29,30,29,30,29,30,29];
 const monthsNames = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre","Trŕcembre"];
 const embolicYears = [3,6,8,11,14,17,19];
 
-// Charger ou initialiser la date Nithalienne depuis le stockage local
-let stored = localStorage.getItem('nithalienDate');
-let nithalienDate = stored ? JSON.parse(stored) : { year: 0, month: 10, day: 1 };
+// Date grégorienne de référence + date Nithalienne associée
+let stored = localStorage.getItem('nithalienRef');
 
-let currentYear = nithalienDate.year;
-let currentMonth = nithalienDate.month;
-let currentDay = nithalienDate.day;
+const GREG_DAY_MS = 24 * 60 * 60 * 1000;
+
+let ref;
+if(stored){
+  ref = JSON.parse(stored);
+} else {
+  // Référence initiale : aujourd'hui = 01 novembre 0000
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  ref = {
+    gregorian: today.getTime(),
+    nithalien: { year: 0, month: 13, day: 14 }
+  };
+  localStorage.setItem('nithalienRef', JSON.stringify(ref));
+}
+
+function isEmbolic(year){
+  return embolicYears.includes((year % 19 === 0 ? 19 : year % 19));
+}
+
+function getMonthsForYear(year){
+  const months = [...monthsNormal];
+  if(isEmbolic(year)) months.push(30);
+  return months;
+}
+
+function addNithalienDays(date, days){
+  let { year, month, day } = date;
+  while(days > 0){
+    const months = getMonthsForYear(year);
+    day++;
+    if(day > months[month]){
+      day = 1;
+      month++;
+      if(month >= months.length){
+        month = 0;
+        year++;
+      }
+    }
+    days--;
+  }
+  return { year, month, day };
+}
+
+// Calcul de la date Nithalienne actuelle
+const now = new Date();
+now.setHours(0,0,0,0);
+const diffDays = Math.floor((now.getTime() - ref.gregorian) / GREG_DAY_MS);
+
+const current = addNithalienDays(ref.nithalien, diffDays);
+
+let currentYear = current.year;
+let currentMonth = current.month;
+let currentDay = current.day;
 
 let viewedYear = currentYear;
 let viewedMonth = currentMonth;
