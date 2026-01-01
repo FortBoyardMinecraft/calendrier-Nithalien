@@ -48,7 +48,7 @@ try{ref=JSON.parse(localStorage.getItem("nithalienRef"))}catch(e){ref=null}
 if(!ref||!ref.nith||ref.nith.month>=monthsOf(ref.nith.year).length){
   const anchor=new Date()
   anchor.setHours(0,0,0,0)
-  ref={greg:anchor.getTime(),nith:{year:1,month:1,day:1}}
+  ref={greg:anchor.getTime(),nith:{year:1,month:0,day:1}}
   localStorage.setItem("nithalienRef",JSON.stringify(ref))
 }
 
